@@ -106,7 +106,7 @@ $conn->close();
 
             <!-- Programmes Card -->
             <div class="col-md-4">
-                <div class="card dashboard-card bg-success text-white" onclick="window.location='courses/course_table.php'">
+                <div class="card dashboard-card bg-success text-white" onclick="window.location='programmes/programme_table.php'">
                     <div class="card-body">
                         <div class="d-flex justify-content-between">
                             <div>
@@ -125,7 +125,7 @@ $conn->close();
 
             <!-- Evaluators Card -->
             <div class="col-md-4">
-                <div class="card dashboard-card bg-info text-white" onclick="window.location='users/user_table.php'">
+                <div class="card dashboard-card bg-info text-white" onclick="window.location='evaluators/evaluator_table.php'">
                     <div class="card-body">
                         <div class="d-flex justify-content-between">
                             <div>

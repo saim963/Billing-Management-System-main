@@ -14,7 +14,7 @@ if (!isset($_SESSION['admin_loggedin']) || $_SESSION['admin_loggedin'] != true) 
 include '../../partials/_dbconnect.php';
 
 // Fetch users data
-$stmt = $conn->prepare("SELECT * FROM students");
+$stmt = $conn->prepare("SELECT * FROM assignment_table");
 $stmt->execute();
 $result = $stmt->get_result();
 $users_rows = [];
@@ -34,7 +34,7 @@ $conn->close();
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-    <title>students - Admin Dashboard</title>
+    <title>Assignments - Admin Dashboard</title>
     <style>
         .container {
             max-width: 100%;
@@ -84,8 +84,8 @@ $conn->close();
 
         <div class="card">
             <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
-                <h4 class="mb-0"><i class="fas fa-users mr-2"></i> Registered Students</h4>
-                <span class="badge badge-light"><?= count($users_rows) ?> Students</span>
+                <h4 class="mb-0"><i class="fas fa-users mr-2"></i>Assignments List</h4>
+                <span class="badge badge-light"><?= count($users_rows) ?> Assignments</span>
             </div>
             <div class="card-body">
                 <div class="input-group mb-3">
@@ -100,19 +100,35 @@ $conn->close();
                         <table class="table table-hover table-striped" id="usersTable">
                             <thead class="thead-light">
                                 <tr>
-                                    <th>Serial No.</th>
-                                    <th>Name</th>
-                                    <th>Enrollment No.</th>
+                                    <th>S.No.</th>
                                     <th>Programme</th>
+                                    <th>Course Code</th>
+                                    <th>Course</th>
+                                    <th>Enrl. No.</th>
+                                    <th>Student</th>
+                                    <th>Evaluator</th>
+                                    <th>Submitted dt.</th>
+                                    <th>Incharge</th>
+                                    <th>Evaluation dt.</th>
+                                    <th>Upload Portal</th>
+                                    <th>Status</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <?php foreach ($users_rows as $row): ?>
                                     <tr>
                                         <td><?= htmlspecialchars($row['sno']) ?></td>
+                                        <td><?= htmlspecialchars($row['programme_title']) ?></td>
+                                        <td><?= htmlspecialchars($row['course_code']) ?></td>
+                                        <td><?= htmlspecialchars($row['course_title']) ?></td>
+                                        <td><?= htmlspecialchars($row['enrolment_number']) ?></td>
                                         <td><?= htmlspecialchars($row['student_name']) ?></td>
-                                        <td><?= htmlspecialchars($row['enrolment_no']) ?></td>
-                                        <td><?= htmlspecialchars($row['programme']) ?></td>
+                                        <td><?= htmlspecialchars($row['evaluator']) ?></td>
+                                        <td><?= htmlspecialchars($row['submitted_on']) ?></td>
+                                        <td><?= htmlspecialchars($row['incharge']) ?></td>
+                                        <td><?= htmlspecialchars($row['evaluation_date']) ?></td>
+                                        <td><?= htmlspecialchars($row['upload_portal']) ?></td>
+                                        <td><?= htmlspecialchars($row['status']) ?></td>
                                         <!-- <td>
                                             <span class="user-status status-active"></span>
                                             Active
@@ -136,7 +152,7 @@ $conn->close();
                         </table>
                     <?php else: ?>
                         <div class="alert alert-info">
-                            <i class="fas fa-info-circle mr-2"></i> No students registered.
+                            <i class="fas fa-info-circle mr-2"></i> No users registered.
                         </div>
                     <?php endif; ?>
                 </div>

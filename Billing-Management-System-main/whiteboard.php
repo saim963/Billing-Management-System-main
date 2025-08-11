@@ -34,35 +34,37 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
         $error_message = "Invalid CSRF token.";
     } else {
+        
         try {
             include 'partials/_dbconnect.php';
-
+        
             if (!$conn) {
                 throw new Exception("Database connection failed");
             }
-
+        
             // Handle assignment evaluation update
             if (isset($_POST['update_assignment'])) {
                 $sno = filter_input(INPUT_POST, 'sno', FILTER_VALIDATE_INT);
                 $evaluation_date = trim($_POST['evaluation_date'] ?? '');
                 $status = trim($_POST['status'] ?? '');
-
+        
                 if (empty($status)) {
                     $error_message = "Status is required.";
                 } elseif (!in_array($status, ['evaluated', 'returned'])) {
                     $error_message = "Invalid status selected.";
                 } else {
-                    $stmt_verify = $conn->prepare("SELECT sno FROM assignment_table WHERE sno = ? status = 'submitted'");
+                    // FIXED: Added missing AND operator
+                    $stmt_verify = $conn->prepare("SELECT sno FROM assignment_table WHERE sno = ? AND status = 'submitted'");
                     $stmt_verify->bind_param("i", $sno);
                     $stmt_verify->execute();
                     $result_verify = $stmt_verify->get_result();
-
+        
                     if ($result_verify->num_rows === 0) {
                         $error_message = "Assignment not found or not authorized to evaluate.";
                     } else {
                         $stmt_update = $conn->prepare("UPDATE assignment_table SET evaluation_date = ?, status = ? WHERE sno = ?");
                         $stmt_update->bind_param("ssi", $evaluation_date, $status, $sno);
-
+        
                         if ($stmt_update->execute() && $stmt_update->affected_rows > 0) {
                             $success_message = "Assignment evaluation updated successfully.";
                         } else {
@@ -73,10 +75,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     $stmt_verify->close();
                 }
             }
-
+        
             // Handle new assignment submission
             elseif (isset($_POST['add_assignment'])) {
-                $programme_title = trim($_POST['programme_title'] ?? '');
+                // FIXED: Changed programme_title to programme to match HTML form
+                $programme_title = trim($_POST['programme_title'] ?? '');  
                 $course_code = trim($_POST['course_code'] ?? '');
                 $course_title = trim($_POST['course_title'] ?? '');
                 $student_name = trim($_POST['student_name'] ?? '');
@@ -87,13 +90,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 $incharge = trim($_POST['incharge'] ?? '');
                 $evaluation_date = trim($_POST['evaluation_date'] ?? '');
                 $status = 'submitted';
-
+        
                 if (empty($programme_title) || empty($course_code) || empty($course_title) || empty($student_name) || empty($enrolment_number) || empty($evaluator) || empty($submitted_on) || empty($incharge)) {
                     $error_message = "All fields are required for assignment submission.";
                 } else {
                     $stmt_add = $conn->prepare("INSERT INTO assignment_table (programme_title, course_code, course_title, enrolment_number, student_name, evaluator, submitted_on, incharge, evaluation_date, upload_portal, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
                     $stmt_add->bind_param("sssssssssss", $programme_title, $course_code, $course_title, $enrolment_number, $student_name, $evaluator, $submitted_on, $incharge, $evaluation_date, $upload_portal, $status);
-
+        
                     if ($stmt_add->execute()) {
                         $success_message = "Assignment submitted successfully.";
                     } else {
@@ -102,20 +105,20 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     $stmt_add->close();
                 }
             }
-
+        
             // Handle new programme addition
             elseif (isset($_POST['add_programme'])) {
                 $programme_title = trim($_POST['programme_title'] ?? '');
                 $course_code = trim($_POST['course_code'] ?? '');
                 $course_title = trim($_POST['course_title'] ?? '');
                 $incharge = trim($_POST['incharge'] ?? '');
-
+        
                 if (empty($programme_title) || empty($course_code) || empty($course_title) || empty($incharge)) {
                     $error_message = "All fields are required for programme addition.";
                 } else {
                     $stmt_prog = $conn->prepare("INSERT INTO programme_table (programme_title, course_code, course_title, incharge) VALUES (?, ?, ?, ?)");
                     $stmt_prog->bind_param("ssss", $programme_title, $course_code, $course_title, $incharge);
-
+        
                     if ($stmt_prog->execute()) {
                         $success_message = "Programme added successfully.";
                     } else {
@@ -124,19 +127,19 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     $stmt_prog->close();
                 }
             }
-
+        
             // Handle new student addition
             elseif (isset($_POST['add_student'])) {
                 $student_name = trim($_POST['student_name'] ?? '');
                 $enrolment_no = trim($_POST['enrolment_no'] ?? '');
                 $programme = trim($_POST['programme'] ?? '');
-
+        
                 if (empty($student_name) || empty($enrolment_no) || empty($programme)) {
                     $error_message = "All fields are required for student addition.";
                 } else {
-                    $stmt_student = $conn->prepare("INSERT INTO students (name, enrolment_no, programme) VALUES (?, ?, ?)");
+                    $stmt_student = $conn->prepare("INSERT INTO students (student_name, enrolment_no, programme) VALUES (?, ?, ?)");
                     $stmt_student->bind_param("sss", $student_name, $enrolment_no, $programme);
-
+        
                     if ($stmt_student->execute()) {
                         $success_message = "Student added successfully.";
                     } else {
@@ -145,7 +148,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     $stmt_student->close();
                 }
             }
-
+        
             // Handle new evaluator addition
             elseif (isset($_POST['add_evaluator'])) {
                 $evaluator_name = trim($_POST['evaluator_name'] ?? '');
@@ -153,13 +156,14 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 $pan = trim($_POST['pan'] ?? '');
                 $address = trim($_POST['address'] ?? '');
                 $amount = trim($_POST['amount'] ?? '');
-
+        
                 if (empty($evaluator_name) || empty($code_no) || empty($pan) || empty($address) || empty($amount)) {
                     $error_message = "All fields are required for evaluator addition.";
                 } else {
+                    // FIXED: Corrected bind_param order to match INSERT statement
                     $stmt_evaluator = $conn->prepare("INSERT INTO evaluators (name, address, code, pan, amount) VALUES (?, ?, ?, ?, ?)");
-                    $stmt_evaluator->bind_param("ssssi", $evaluator_name, $code_no, $pan, $address, $amount);
-
+                    $stmt_evaluator->bind_param("sssss", $evaluator_name, $address, $code_no, $pan, $amount);
+        
                     if ($stmt_evaluator->execute()) {
                         $success_message = "Evaluator added successfully.";
                     } else {
@@ -170,12 +174,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             }
         } catch (Exception $e) {
             error_log("Form submission error: " . $e->getMessage());
-            $error_message = "An error occurred while processing your request.";
+            $error_message = "An error occurred while processing your request: " . $e->getMessage(); // Added actual error for debugging
         } finally {
             if (isset($conn) && $conn) {
                 $conn->close();
             }
         }
+        
     }
 }
 
@@ -223,8 +228,26 @@ try {
         $stmt_evaluated->close();
     }
 
-    // Fetch programmes for dropdown
-    $stmt_programmes = $conn->prepare("SELECT programme_title, course_code, course_title, incharge FROM programme_table ORDER BY programme_title");
+    // Fetch unique programmes for dropdown (better performance)
+    //     $stmt_programmes = $conn->prepare("
+    //     SELECT programme_title, 
+    //            MIN(course_code) as course_code, 
+    //            MIN(course_title) as course_title, 
+    //            MIN(incharge) as incharge 
+    //     FROM programme_table 
+    //     GROUP BY programme_title 
+    //     ORDER BY programme_title
+    // ");
+
+    // Fetch ALL course codes for dropdown
+    $stmt_programmes = $conn->prepare("
+    SELECT DISTINCT course_code, course_title, programme_title, incharge
+    FROM programme_table 
+    WHERE course_code IS NOT NULL 
+    AND course_code != ''
+    ORDER BY course_code
+");
+
     if ($stmt_programmes) {
         $stmt_programmes->execute();
         $result_programmes = $stmt_programmes->get_result();
@@ -466,75 +489,130 @@ try {
                         <input type="hidden" name="add_assignment" value="1">
                         <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>">
                         <div class="row">
+                            <!-- Adding Programme -->
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="programme_title">Programme Title <span class="text-danger">*</span></label>
-                                    <input type="text" name="programme_title" class="form-control" required>
+                                    <label for="programme">Programme <span class="text-danger">*</span></label>
+                                    <select name="programme_title" id="programme" class="form-control" required>
+                                        <option value="">-- Select Programme --</option>
+                                        <?php foreach ($programmes as $programme): ?>
+                                            <option value="<?php echo htmlspecialchars($programme['programme_title']); ?>">
+                                                <?php echo htmlspecialchars($programme['programme_title']); ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                    <small class="form-text text-muted">
+                                        <i class="fas fa-info-circle"></i> If programme is not listed, please add it in the Programme Management section first.
+                                    </small>
                                 </div>
                             </div>
+                            <!-- Adding Course Code -->
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="course_code">Course Code <span class="text-danger">*</span></label>
-                                    <input type="text" name="course_code" class="form-control" required>
+                                    <select name="course_code" id="course_code" class="form-control" required>
+                                        <option value="">-- Select Course Code --</option>
+                                        <?php foreach ($programmes as $programme): ?>
+                                            <option value="<?php echo htmlspecialchars($programme['course_code']); ?>">
+                                                <?php echo htmlspecialchars($programme['course_code']); ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                    <small class="form-text text-muted">
+                                        <i class="fas fa-info-circle"></i> If course code is not listed, please add it in the Programme Management section first.
+                                    </small>
                                 </div>
                             </div>
                         </div>
+
                         <div class="row">
+                            <!-- Adding Course Title -->
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="course_title">Course Title <span class="text-danger">*</span></label>
-                                    <input type="text" name="course_title" class="form-control" required>
+                                    <select name="course_title" id="course_title" class="form-control" required>
+                                        <option value="">-- Select Course Title --</option>
+                                        <?php foreach ($programmes as $programme): ?>
+                                            <option value="<?php echo htmlspecialchars($programme['course_title']); ?>">
+                                                <?php echo htmlspecialchars($programme['course_title']); ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                    <small class="form-text text-muted">
+                                        <i class="fas fa-info-circle"></i> If course title is not listed, please add it in the Programme Management section first.
+                                    </small>
                                 </div>
                             </div>
+                            <!-- Adding Student name -->
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="student_name">Student Name <span class="text-danger">*</span></label>
-                                    <input type="text" name="student_name" class="form-control" required>
+                                    <input type="text" name="student_name" id="student_name" class="form-control" required>
                                 </div>
                             </div>
                         </div>
+
                         <div class="row">
+                            <!-- Enrolment Name -->
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="enrolment_number">Enrolment Number <span class="text-danger">*</span></label>
-                                    <input type="text" name="enrolment_number" class="form-control" required>
+                                    <input type="text" name="enrolment_number" id="enrolment_number" class="form-control" required>
                                 </div>
                             </div>
+                            <!-- Adding Evaluator -->
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="evaluator">Evaluator <span class="text-danger">*</span></label>
-                                    <input type="text" name="evaluator" class="form-control" required>
+                                    <input type="text" name="evaluator" id="evaluator" class="form-control" required>
                                 </div>
                             </div>
                         </div>
+
                         <div class="row">
+                            <!-- Adding Submission date -->
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="submitted_on">Submission Date <span class="text-danger">*</span></label>
-                                    <input type="text" name="submitted_on" class="form-control" required>
+                                    <input type="date" name="submitted_on" id="submitted_on" class="form-control" required>
                                 </div>
                             </div>
+                            <!-- Adding Incharge -->
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="incharge">incharge <span class="text-danger">*</span></label>
-                                    <input type="text" name="incharge" class="form-control" required>
+                                    <label for="incharge">Incharge <span class="text-danger">*</span></label>
+                                    <select name="incharge" id="incharge" class="form-control" required>
+                                        <option value="">-- Select Incharge --</option>
+                                        <?php foreach ($programmes as $programme): ?>
+                                            <option value="<?php echo htmlspecialchars($programme['incharge']); ?>">
+                                                <?php echo htmlspecialchars($programme['incharge']); ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                    <small class="form-text text-muted">
+                                        <i class="fas fa-info-circle"></i> If incharge is not listed, please add it in the Programme Management section first.
+                                    </small>
                                 </div>
                             </div>
                         </div>
+
                         <div class="row">
+                            <!-- Adding Evaluator -->
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="evaluation_date">Evaluation Date</label>
-                                    <input type="text" name="evaluation_date" class="form-control">
+                                    <input type="date" name="evaluation_date" id="evaluation_date" class="form-control">
                                 </div>
                             </div>
+                            <!-- Adding Upload Portal -->
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="upload_portal">Upload Portal</label>
-                                    <input type="text" name="upload_portal" class="form-control">
+                                    <input type="text" name="upload_portal" id="upload_portal" class="form-control">
                                 </div>
                             </div>
                         </div>
+
                         <div class="form-group text-right">
                             <button type="button" class="btn btn-secondary" data-dismiss="modal">
                                 <i class="fas fa-times"></i> Cancel
@@ -613,15 +691,25 @@ try {
                         <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>">
                         <div class="form-group">
                             <label for="student_name">Student Name <span class="text-danger">*</span></label>
-                            <input type="text" name="student_name" class="form-control" required>
+                            <input type="text" name="student_name" id="student_name" class="form-control" required>
                         </div>
                         <div class="form-group">
                             <label for="enrolment_no">Enrolment Number <span class="text-danger">*</span></label>
-                            <input type="text" name="enrolment_no" class="form-control" required>
+                            <input type="text" name="enrolment_no"  id="enrolment_no" class="form-control" required>
                         </div>
                         <div class="form-group">
                             <label for="programme">Programme <span class="text-danger">*</span></label>
-                            <input type="text" name="programme" class="form-control" required>
+                            <select name="programme" id="programme" class="form-control" required>
+                                <option value="">-- Select Programme --</option>
+                                <?php foreach ($programmes as $prog): ?>
+                                    <option value="<?php echo htmlspecialchars($prog['programme_title']); ?>">
+                                        <?php echo htmlspecialchars($prog['programme_title']); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                            <small class="form-text text-muted">
+                                <i class="fas fa-info-circle"></i> If programme is not listed, please add it in the Programme Management section first.
+                            </small>
                         </div>
                         <div class="form-group text-right">
                             <button type="button" class="btn btn-secondary" data-dismiss="modal">

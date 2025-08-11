@@ -13,13 +13,13 @@ if (!isset($_SESSION['admin_loggedin']) || $_SESSION['admin_loggedin'] != true) 
 
 include '../../partials/_dbconnect.php';
 
-// Fetch courses data
-$stmt = $conn->prepare("SELECT id, course, job, rate FROM courses");
+// Fetch programmes data
+$stmt = $conn->prepare("SELECT * FROM programme_table");
 $stmt->execute();
 $result = $stmt->get_result();
-$courses_rows = [];
+$programmes_rows = [];
 while ($row = $result->fetch_assoc()) {
-    $courses_rows[] = $row;
+    $programmes_rows[] = $row;
 }
 
 $stmt->close();
@@ -34,7 +34,7 @@ $conn->close();
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-    <title>Courses - Admin Dashboard</title>
+    <title>Programmes - Admin Dashboard</title>
     <style>
         .container {
             max-width: 100%;
@@ -85,42 +85,47 @@ $conn->close();
 
         <div class="card">
             <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
-                <h4 class="mb-0"><i class="fas fa-graduation-cap mr-2"></i> Available Courses</h4>
-                <span class="badge badge-light"><?= count($courses_rows) ?> Courses</span>
+                <h4 class="mb-0"><i class="fas fa-graduation-cap mr-2"></i> Available Programmes</h4>
+                <span class="badge badge-light"><?php echo count($programmes_rows); ?> Programmes</span>
             </div>
             <div class="card-body">
                 <div class="d-flex justify-content-end mb-3">
                     <button class="btn btn-success" data-toggle="modal" data-target="#addCourseModal">
-                        <i class="fas fa-plus"></i> Add New Course
+                        <i class="fas fa-plus"></i> Add New Programme
                     </button>
                 </div>
 
                 <div class="table-responsive">
-                    <?php if (!empty($courses_rows)): ?>
+                    <?php if (!empty($programmes_rows)): ?>
                         <table class="table table-hover table-striped">
                             <thead class="thead-light">
                                 <tr>
-                                    <th>Course Name</th>
-                                    <th>Job Role</th>
-                                    <th>Rate (Rs)</th>
+                                    <th>Programme Title</th>
+                                    <th>Course Code</th>
+                                    <th>Course Title</th>
+                                    <th>Incharge</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="courses-table-body">
-                                <?php foreach ($courses_rows as $row): ?>
-                                    <tr data-id="<?= $row['id'] ?>">
-                                        <td><?= htmlspecialchars($row['course']) ?></td>
-                                        <td><?= htmlspecialchars($row['job']) ?></td>
-                                        <td><?= htmlspecialchars($row['rate']) ?></td>
+                                <?php foreach ($programmes_rows as $index => $row): ?>
+                                    <tr data-index="<?php echo $index; ?>" data-course_code="<?php echo htmlspecialchars($row['course_code']); ?>">
+                                        <td><?php echo htmlspecialchars($row['programme_title']); ?></td>
+                                        <td><?php echo htmlspecialchars($row['course_code']); ?></td>
+                                        <td><?php echo htmlspecialchars($row['course_title']); ?></td>
+                                        <td><?php echo htmlspecialchars($row['incharge']); ?></td>
                                         <td>
                                             <button class="btn btn-sm btn-outline-primary edit-btn"
-                                                data-id="<?= $row['id'] ?>"
-                                                data-course="<?= htmlspecialchars($row['course']) ?>"
-                                                data-job="<?= htmlspecialchars($row['job']) ?>"
-                                                data-rate="<?= htmlspecialchars($row['rate']) ?>">
+                                                data-index="<?php echo $index; ?>"
+                                                data-programme="<?php echo htmlspecialchars($row['programme_title']); ?>"
+                                                data-course_code="<?php echo htmlspecialchars($row['course_code']); ?>"
+                                                data-course_title="<?php echo htmlspecialchars($row['course_title']); ?>"
+                                                data-incharge="<?php echo htmlspecialchars($row['incharge']); ?>">
                                                 <i class="fas fa-edit"></i>
                                             </button>
-                                            <button class="btn btn-sm btn-outline-danger delete-btn" data-id="<?= $row['id'] ?>">
+                                            <button class="btn btn-sm btn-outline-danger delete-btn" 
+                                                data-course_code="<?php echo htmlspecialchars($row['course_code']); ?>"
+                                                data-programme="<?php echo htmlspecialchars($row['programme_title']); ?>">
                                                 <i class="fas fa-trash"></i>
                                             </button>
                                         </td>
@@ -130,7 +135,7 @@ $conn->close();
                         </table>
                     <?php else: ?>
                         <div class="alert alert-info">
-                            <i class="fas fa-info-circle mr-2"></i> No courses available.
+                            <i class="fas fa-info-circle mr-2"></i> No programmes available.
                         </div>
                     <?php endif; ?>
                 </div>
@@ -138,12 +143,12 @@ $conn->close();
         </div>
     </div>
 
-    <!-- Add Course Modal -->
+    <!-- Add Programme Modal -->
     <div class="modal fade" id="addCourseModal" tabindex="-1" role="dialog" aria-labelledby="addCourseModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header bg-success text-white">
-                    <h5 class="modal-title" id="addCourseModalLabel">Add New Course</h5>
+                    <h5 class="modal-title" id="addCourseModalLabel">Add New Programme</h5>
                     <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
@@ -151,57 +156,65 @@ $conn->close();
                 <div class="modal-body">
                     <form id="addCourseForm">
                         <div class="form-group">
-                            <label>Course Name</label>
-                            <input type="text" class="form-control" id="add-course-name" required>
+                            <label>Programme Title</label>
+                            <input type="text" class="form-control" id="add-programme-title" required>
                         </div>
                         <div class="form-group">
-                            <label>Job Role</label>
-                            <input type="text" class="form-control" id="add-job-role" required>
+                            <label>Course Code</label>
+                            <input type="text" class="form-control" id="add-course-code" required>
                         </div>
                         <div class="form-group">
-                            <label>Rate (Rs)</label>
-                            <input type="number" class="form-control" id="add-rate" required>
+                            <label>Course Title</label>
+                            <input type="text" class="form-control" id="add-course-title" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Incharge</label>
+                            <input type="text" class="form-control" id="add-incharge" required>
                         </div>
                     </form>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-success" id="save-course-btn">Save Course</button>
+                    <button type="button" class="btn btn-success" id="save-course-btn">Save Programme</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Edit Course Modal -->
+    <!-- Edit Programme Modal -->
     <div class="modal fade" id="editCourseModal" tabindex="-1" role="dialog" aria-labelledby="editCourseModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title" id="editCourseModalLabel">Edit Course</h5>
+                    <h5 class="modal-title" id="editCourseModalLabel">Edit Programme</h5>
                     <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
                 <div class="modal-body">
                     <form id="editCourseForm">
-                        <input type="hidden" id="edit-course-id">
+                        <input type="hidden" id="edit-course-original-code">
                         <div class="form-group">
-                            <label>Course Name</label>
-                            <input type="text" class="form-control" id="edit-course-name" required>
+                            <label>Programme Title</label>
+                            <input type="text" class="form-control" id="edit-programme-title" required>
                         </div>
                         <div class="form-group">
-                            <label>Job Role</label>
-                            <input type="text" class="form-control" id="edit-job-role" required>
+                            <label>Course Code</label>
+                            <input type="text" class="form-control" id="edit-course-code" required>
                         </div>
                         <div class="form-group">
-                            <label>Rate (Rs)</label>
-                            <input type="number" class="form-control" id="edit-rate" required>
+                            <label>Course Title</label>
+                            <input type="text" class="form-control" id="edit-course-title" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Incharge</label>
+                            <input type="text" class="form-control" id="edit-incharge" required>
                         </div>
                     </form>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" id="update-course-btn">Update Course</button>
+                    <button type="button" class="btn btn-primary" id="update-course-btn">Update Programme</button>
                 </div>
             </div>
         </div>
@@ -218,8 +231,9 @@ $conn->close();
                     </button>
                 </div>
                 <div class="modal-body">
-                    <p>Are you sure you want to delete this course? This action cannot be undone.</p>
-                    <input type="hidden" id="delete-course-id">
+                    <p>Are you sure you want to delete this programme? This action cannot be undone.</p>
+                    <p><strong>Programme:</strong> <span id="delete-programme-name"></span></p>
+                    <input type="hidden" id="delete-course-code">
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
@@ -245,148 +259,161 @@ $conn->close();
                 $('.toast').addClass(isSuccess ? 'bg-success text-white' : 'bg-danger text-white');
             }
 
-            // Open edit modal with course data
+            // Open edit modal with programme data
             $(document).on('click', '.edit-btn', function() {
-                const id = $(this).data('id');
-                const course = $(this).data('course');
-                const job = $(this).data('job');
-                const rate = $(this).data('rate');
+                const programme = $(this).data('programme');
+                const courseCode = $(this).data('course_code');
+                const courseTitle = $(this).data('course_title');
+                const incharge = $(this).data('incharge');
 
-                $('#edit-course-id').val(id);
-                $('#edit-course-name').val(course);
-                $('#edit-job-role').val(job);
-                $('#edit-rate').val(rate);
+                $('#edit-course-original-code').val(courseCode);
+                $('#edit-programme-title').val(programme);
+                $('#edit-course-code').val(courseCode);
+                $('#edit-course-title').val(courseTitle);
+                $('#edit-incharge').val(incharge);
 
                 $('#editCourseModal').modal('show');
             });
 
-            // Update course
+            // Update programme
             $('#update-course-btn').click(function() {
-                const courseId = $('#edit-course-id').val();
-                const courseName = $('#edit-course-name').val();
-                const jobRole = $('#edit-job-role').val();
-                const rate = $('#edit-rate').val();
+                const originalCourseCode = $('#edit-course-original-code').val();
+                const programmeTitle = $('#edit-programme-title').val();
+                const courseCode = $('#edit-course-code').val();
+                const courseTitle = $('#edit-course-title').val();
+                const incharge = $('#edit-incharge').val();
 
-                if (!courseName || !jobRole || !rate) {
+                if (!programmeTitle || !courseCode || !courseTitle || !incharge) {
                     showToast('All fields are required', false);
                     return;
                 }
 
                 $.ajax({
-                    url: 'update_course.php',
+                    url: 'update_programme.php',
                     type: 'POST',
                     data: {
-                        id: courseId,
-                        course: courseName,
-                        job: jobRole,
-                        rate: rate
+                        original_course_code: originalCourseCode,
+                        programme_title: programmeTitle,
+                        course_code: courseCode,
+                        course_title: courseTitle,
+                        incharge: incharge
                     },
                     success: function(response) {
                         const result = JSON.parse(response);
                         if (result.success) {
                             // Update the table row
-                            const row = $(`tr[data-id="${courseId}"]`);
-                            row.find('td:eq(0)').text(courseName);
-                            row.find('td:eq(1)').text(jobRole);
-                            row.find('td:eq(2)').text(rate);
+                            const row = $(`tr[data-course_code="${originalCourseCode}"]`);
+                            row.find('td:eq(0)').text(programmeTitle);
+                            row.find('td:eq(1)').text(courseCode);
+                            row.find('td:eq(2)').text(courseTitle);
+                            row.find('td:eq(3)').text(incharge);
 
-                            // Update the edit button data attributes
-                            row.find('.edit-btn').data('course', courseName);
-                            row.find('.edit-btn').data('job', jobRole);
-                            row.find('.edit-btn').data('rate', rate);
+                            // Update data attributes
+                            row.attr('data-course_code', courseCode);
+                            row.find('.edit-btn').data('programme', programmeTitle);
+                            row.find('.edit-btn').data('course_code', courseCode);
+                            row.find('.edit-btn').data('course_title', courseTitle);
+                            row.find('.edit-btn').data('incharge', incharge);
 
-                            showToast('Course updated successfully');
+                            row.find('.delete-btn').data('course_code', courseCode);
+                            row.find('.delete-btn').data('programme', programmeTitle);
+
+                            showToast('Programme updated successfully');
                             $('#editCourseModal').modal('hide');
                         } else {
-                            showToast(result.message || 'Failed to update course', false);
+                            showToast(result.message || 'Failed to update programme', false);
                         }
                     },
                     error: function() {
-                        showToast('An error occurred while updating the course', false);
+                        showToast('An error occurred while updating the programme', false);
                     }
                 });
             });
 
             // Open delete confirmation modal
             $(document).on('click', '.delete-btn', function() {
-                const courseId = $(this).data('id');
-                $('#delete-course-id').val(courseId);
+                const courseCode = $(this).data('course_code');
+                const programmeName = $(this).data('programme');
+                $('#delete-course-code').val(courseCode);
+                $('#delete-programme-name').text(programmeName);
                 $('#deleteCourseModal').modal('show');
             });
 
-            // Delete course
+            // Delete programme
             $('#confirm-delete-btn').click(function() {
-                const courseId = $('#delete-course-id').val();
+                const courseCode = $('#delete-course-code').val();
 
                 $.ajax({
-                    url: 'delete_course.php',
+                    url: 'delete_programme.php',
                     type: 'POST',
                     data: {
-                        id: courseId
+                        course_code: courseCode
                     },
                     success: function(response) {
                         const result = JSON.parse(response);
                         if (result.success) {
                             // Remove the row from the table
-                            $(`tr[data-id="${courseId}"]`).fadeOut('slow', function() {
+                            $(`tr[data-course_code="${courseCode}"]`).fadeOut('slow', function() {
                                 $(this).remove();
 
-                                // Update course count in badge
+                                // Update programme count in badge
                                 const courseCount = $('#courses-table-body tr').length;
-                                $('.badge').text(courseCount + ' Courses');
+                                $('.badge').text(courseCount + ' Programmes');
 
-                                // Show empty message if no courses left
+                                // Show empty message if no programmes left
                                 if (courseCount === 0) {
                                     $('.table-responsive').html(`
                                         <div class="alert alert-info">
-                                            <i class="fas fa-info-circle mr-2"></i> No courses available.
+                                            <i class="fas fa-info-circle mr-2"></i> No programmes available.
                                         </div>
                                     `);
                                 }
                             });
 
-                            showToast('Course deleted successfully');
+                            showToast('Programme deleted successfully');
                             $('#deleteCourseModal').modal('hide');
                         } else {
-                            showToast(result.message || 'Failed to delete course', false);
+                            showToast(result.message || 'Failed to delete programme', false);
                         }
                     },
                     error: function() {
-                        showToast('An error occurred while deleting the course', false);
+                        showToast('An error occurred while deleting the programme', false);
                     }
                 });
             });
 
-            // Add new course functionality (already in your code, but updated to work with the UI)
+            // Add new programme functionality
             $('#save-course-btn').click(function() {
-                const courseName = $('#add-course-name').val();
-                const jobRole = $('#add-job-role').val();
-                const rate = $('#add-rate').val();
+                const programmeTitle = $('#add-programme-title').val();
+                const courseCode = $('#add-course-code').val();
+                const courseTitle = $('#add-course-title').val();
+                const incharge = $('#add-incharge').val();
 
-                if (!courseName || !jobRole || !rate) {
+                if (!programmeTitle || !courseCode || !courseTitle || !incharge) {
                     showToast('All fields are required', false);
                     return;
                 }
 
                 $.ajax({
-                    url: 'add_course.php',
+                    url: 'add_programme.php',
                     type: 'POST',
                     data: {
-                        course: courseName,
-                        job: jobRole,
-                        rate: rate
+                        programme_title: programmeTitle,
+                        course_code: courseCode,
+                        course_title: courseTitle,
+                        incharge: incharge
                     },
                     success: function(response) {
                         const result = JSON.parse(response);
                         if (result.success) {
-                            // Reload the page to show the new course
+                            // Reload the page to show the new programme
                             location.reload();
                         } else {
-                            showToast(result.message || 'Failed to add course', false);
+                            showToast(result.message || 'Failed to add programme', false);
                         }
                     },
                     error: function() {
-                        showToast('An error occurred while adding the course', false);
+                        showToast('An error occurred while adding the programme', false);
                     }
                 });
             });

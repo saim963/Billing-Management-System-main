@@ -14,7 +14,7 @@ if (!isset($_SESSION['admin_loggedin']) || $_SESSION['admin_loggedin'] != true) 
 include '../../partials/_dbconnect.php';
 
 // Fetch users data
-$stmt = $conn->prepare("SELECT * FROM students");
+$stmt = $conn->prepare("SELECT * FROM evaluators");
 $stmt->execute();
 $result = $stmt->get_result();
 $users_rows = [];
@@ -34,7 +34,7 @@ $conn->close();
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-    <title>students - Admin Dashboard</title>
+    <title>Evaluators - Admin Dashboard</title>
     <style>
         .container {
             max-width: 100%;
@@ -84,8 +84,8 @@ $conn->close();
 
         <div class="card">
             <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
-                <h4 class="mb-0"><i class="fas fa-users mr-2"></i> Registered Students</h4>
-                <span class="badge badge-light"><?= count($users_rows) ?> Students</span>
+                <h4 class="mb-0"><i class="fas fa-users mr-2"></i> Registered Evaluators</h4>
+                <span class="badge badge-light"><?= count($users_rows) ?> Evaluators</span>
             </div>
             <div class="card-body">
                 <div class="input-group mb-3">
@@ -102,18 +102,24 @@ $conn->close();
                                 <tr>
                                     <th>Serial No.</th>
                                     <th>Name</th>
-                                    <th>Enrollment No.</th>
-                                    <th>Programme</th>
+                                    <th>Address</th>
+                                    <th>Code</th>
+                                    <th>PAN</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <?php foreach ($users_rows as $row): ?>
                                     <tr>
                                         <td><?= htmlspecialchars($row['sno']) ?></td>
-                                        <td><?= htmlspecialchars($row['student_name']) ?></td>
-                                        <td><?= htmlspecialchars($row['enrolment_no']) ?></td>
-                                        <td><?= htmlspecialchars($row['programme']) ?></td>
-                                        <!-- <td>
+                                        <td><?= htmlspecialchars($row['name']) ?></td>
+                                        <td><?= htmlspecialchars($row['address']) ?></td>
+                                        <td><?= htmlspecialchars($row['code']) ?></td>
+                                        <td><?= htmlspecialchars($row['pan']) ?></td>
+                                        <td><?= htmlspecialchars($row['amount']) ?></td>
+                                        <td>
                                             <span class="user-status status-active"></span>
                                             Active
                                         </td>
@@ -129,14 +135,14 @@ $conn->close();
                                                     <i class="fas fa-user-times"></i>
                                                 </button>
                                             </div>
-                                        </td> -->
+                                        </td>
                                     </tr>
                                 <?php endforeach; ?>
                             </tbody>
                         </table>
                     <?php else: ?>
                         <div class="alert alert-info">
-                            <i class="fas fa-info-circle mr-2"></i> No students registered.
+                            <i class="fas fa-info-circle mr-2"></i> No evaluators registered.
                         </div>
                     <?php endif; ?>
                 </div>
