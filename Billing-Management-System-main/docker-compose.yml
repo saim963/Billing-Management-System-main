@@ -1,0 +1,40 @@
+services:
+  www:
+    image: webdevops/php-apache-dev:8.2
+    container_name: webdevops_ignou_php_apache
+    volumes:
+      - "./:/app"            # Maps your project directory to /app inside the container
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - db
+    environment:
+      - WEB_DOCUMENT_ROOT=/app  # Tells the container to use /app as the web root
+
+  db:
+    image: mysql:latest
+    container_name: mysql_ignou_db
+    environment:
+      - MYSQL_ROOT_PASSWORD=rootpassword
+      - MYSQL_DATABASE=ignou_bill_db
+      - MYSQL_USER=admin
+      - MYSQL_PASSWORD=password
+    volumes:
+      - "db_data:/var/lib/mysql"
+    ports:
+      - "3306:3306"
+
+  phpmyadmin:
+        image: phpmyadmin/phpmyadmin
+        ports:
+            - "8001:80"
+        environment:
+            - PMA_HOST=db
+            - PMA_PORT=3306
+        depends_on:
+            - db
+        restart: unless-stopped
+
+volumes:
+  db_data:

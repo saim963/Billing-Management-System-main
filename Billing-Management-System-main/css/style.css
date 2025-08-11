@@ -1,0 +1,163 @@
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: #f8f9fa;
+    color: #212529;
+}
+
+.container-fluid {
+    padding: 0 2rem;
+}
+
+.alert-success {
+    background: linear-gradient(90deg, #239441, #5ceca4);
+    color: white;
+    border: none;
+}
+
+.alert-success h4,
+.alert-success p {
+    color: white;
+}
+
+.btn-primary,
+.btn-success {
+    transition: transform 0.2s ease-in-out;
+}
+
+.btn-primary:hover,
+.btn-success:hover {
+    transform: scale(1.05);
+}
+
+.btn-danger {
+    transition: background-color 0.3s ease-in-out;
+}
+
+.btn-danger:hover {
+    background-color: #ff5252;
+}
+
+.table thead {
+    background-color: #343a40;
+    color: white;
+}
+
+.table tbody tr:hover {
+    background-color: #f1f1f1;
+}
+
+.rate-cell {
+    font-weight: bold;
+    color: #28a745;
+}
+
+.border-line {
+    margin: 16px 0 4px;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.form-control {
+    border-radius: 0.25rem;
+    border: 1px solid #ced4da;
+}
+
+.modal-content {
+    border-radius: 0.5rem;
+}
+
+/* Card Customization */
+.card {
+    background-color: #e3f2fd;
+    /* Light blue background */
+    border: 1px solid #90caf9;
+    /* Blue border */
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+    background: linear-gradient(90deg, #42a5f5, #1e88e5);
+    /* Blue gradient */
+    color: white;
+    font-weight: 500;
+    border-bottom: 1px solid #90caf9;
+}
+
+.card-body {
+    background-color: #ffffff;
+    /* White background */
+
+    color: #424242;
+    /* Dark gray text */
+    padding: 1.5rem;
+}
+
+/* For selecting workplace */
+.flex-container {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+
+.flex-container h6 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: #343a40;
+    font-weight: 600;
+}
+
+.flex-container select.form-control {
+    width: 200px;
+    padding: 8px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 0.95rem;
+    transition: border-color 0.3s ease;
+}
+
+.flex-container select.form-control:focus {
+    border-color: #28a745;
+    box-shadow: 0 0 5px rgba(40, 167, 69, 0.3);
+    outline: none;
+}
+
+.flex-container .btn-success {
+    padding: 8px 20px;
+    font-size: 0.95rem;
+    border-radius: 4px;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.flex-container .btn-success:hover {
+    background-color: #218838;
+    transform: translateY(-2px);
+}
+
+.flex-container .btn-success:disabled {
+    background-color: #6c757d;
+    cursor: not-allowed;
+}
+
+@media (max-width: 576px) {
+    .flex-container {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 10px;
+    }
+
+    .flex-container select.form-control {
+        width: 100%;
+    }
+
+    .flex-container .btn-success {
+        width: 100%;
+        text-align: center;
+    }
+}
